@@ -23,6 +23,11 @@ const files = {
   settings: path.join(dataDir, 'settings.json')
 }
 
+function getSettings() {
+  const settings = readJSON(files.settings)
+  return settings[0] || {}
+}
+
 function readJSON(file) {
   try {
     if (!fs.existsSync(file)) return []
@@ -70,8 +75,7 @@ function httpsGet(urlStr) {
 }
 
 async function sendTelegram(text, chatIdOverride) {
-  const settings = readJSON(files.settings)
-  const s = settings[0] || {}
+  const s = getSettings()
   const token = s.telegram_bot_token
   const chatId = chatIdOverride || s.telegram_chat_id
   if (!token || !chatId) return
@@ -83,6 +87,29 @@ function send(res, status, body, headers = {}) {
   const h = { 'Content-Type': 'application/json', ...headers }
   res.writeHead(status, h)
   res.end(JSON.stringify(body))
+}
+
+function isExpired(tx) {
+  if (!tx || !tx.expires_at) return false
+  try {
+    return new Date(tx.expires_at).getTime() < Date.now()
+  } catch {
+    return false
+  }
+}
+
+function markExpiredTransactions() {
+  const txs = readJSON(files.transactions)
+  let changed = false
+  txs.forEach(tx => {
+    if (tx.type === 'deposit' && tx.status === 'pending' && isExpired(tx)) {
+      tx.status = 'expired'
+      tx.updated_at = nowISO()
+      tx.expired_at = tx.expired_at || nowISO()
+      changed = true
+    }
+  })
+  if (changed) writeJSON(files.transactions, txs)
 }
 
 function serveStatic(req, res) {
@@ -253,24 +280,35 @@ async function handleApi(req, res) {
     const user = requireUser(req, res)
     if (!user) return
     const body = await parseBody(req)
-    const settings = readJSON(files.settings)
-    const apikey = (settings[0] || {}).apikey
+    markExpiredTransactions()
+    const s = getSettings()
+    const apikey = s.apikey
+    const amount = Number(body.amount || 0)
+    if (!(amount > 0)) return send(res, 400, { error: 'invalid_amount' })
+    const transactions = readJSON(files.transactions)
+    const pending = transactions.find(t => t.user_id === user.id && t.type === 'deposit' && t.status === 'pending')
+    if (pending && !isExpired(pending)) return send(res, 400, { error: 'pending_deposit_exists', transaction: pending })
     if (!apikey) return send(res, 400, { error: 'missing_apikey' })
-    const urlStr = `https://my-payment.autsc.my.id/api/deposit?amount=${encodeURIComponent(body.amount)}&apikey=${encodeURIComponent(apikey)}`
+    const urlStr = `https://my-payment.autsc.my.id/api/deposit?amount=${encodeURIComponent(amount)}&apikey=${encodeURIComponent(apikey)}`
     const resp = await httpsGet(urlStr)
     if (resp.statusCode !== 200) return send(res, 400, { error: 'deposit_api_error', details: resp.text })
     const data = resp.json && resp.json.data ? resp.json.data : {}
-    const transactions = readJSON(files.transactions)
+    const bonusPercent = Number(s.topup_bonus_percent || 0)
+    const bonusAmount = Math.floor(Number(data.amount || amount) * bonusPercent / 100)
     const tx = {
       id: uuid(),
       user_id: user.id,
       type: 'deposit',
-      amount: data.amount || body.amount,
-      fee: data. fee || 0,
-      total: data.total_amount || 0,
+      amount: Number(data.amount || amount),
+      fee: Number(data.fee || 0),
+      total: Number(data.total_amount || 0),
       status: 'pending',
       external_transaction_id: data.transaction_id,
       qris_url: data.qris_url,
+      bonus_percent: bonusPercent,
+      bonus_amount: bonusAmount,
+      expires_at: data.expired_at,
+      expired_minutes: data.expired_minutes,
       created_at: nowISO()
     }
     transactions.push(tx)
@@ -278,16 +316,17 @@ async function handleApi(req, res) {
     const notifs = readJSON(files.notifications)
     notifs.push({ id: uuid(), user_id: null, message: `Deposit dibuat oleh ${user.username} sebesar ${tx.amount}`, created_at: nowISO() })
     writeJSON(files.notifications, notifs)
-    await sendTelegram(`💳 <b>Top Up Pending</b>\n👤 <b>User:</b> ${user.username}\n💰 <b>Jumlah:</b> Rp ${Number(tx.amount||0).toLocaleString('id-ID')}\n💸 <b>Biaya:</b> Rp ${Number(tx.fee||0).toLocaleString('id-ID')}\n🧾 <b>Total:</b> Rp ${Number(tx.total||0).toLocaleString('id-ID')}\n🆔 <b>ID:</b> <code>${tx.external_transaction_id}</code>\n🔗 <a href="${String(tx.qris_url||'').replace(/`/g,'').trim()}">QRIS</a>`) 
-    send(res, 200, { transaction: tx, deposit: data })
+    await sendTelegram(`💳 <b>Top Up Pending</b>\n👤 <b>User:</b> ${user.username}\n💰 <b>Jumlah:</b> Rp ${Number(tx.amount||0).toLocaleString('id-ID')}\n💸 <b>Biaya:</b> Rp ${Number(tx.fee||0).toLocaleString('id-ID')}\n🧾 <b>Total:</b> Rp ${Number(tx.total||0).toLocaleString('id-ID')}\n🎁 <b>Bonus:</b> Rp ${Number(tx.bonus_amount||0).toLocaleString('id-ID')} (${Number(tx.bonus_percent||0)}%)\n🆔 <b>ID:</b> <code>${tx.external_transaction_id}</code>\n🔗 <a href="${String(tx.qris_url||'').replace(/`/g,'').trim()}">QRIS</a>`)
+    send(res, 200, { transaction: tx, deposit: { ...data, bonus_amount: bonusAmount, bonus_percent: bonusPercent } })
     return
   }
   if (req.method === 'GET' && pathname === '/api/deposit/status') {
     const user = requireUser(req, res)
     if (!user) return
     const transaction_id = urlObj.searchParams.get('transaction_id')
-    const settings = readJSON(files.settings)
-    const apikey = (settings[0] || {}).apikey
+    markExpiredTransactions()
+    const s = getSettings()
+    const apikey = s.apikey
     if (!apikey) return send(res, 400, { error: 'missing_apikey' })
     const urlStr = `https://my-payment.autsc.my.id/api/status/payment?transaction_id=${encodeURIComponent(transaction_id)}&apikey=${encodeURIComponent(apikey)}`
     const resp = await httpsGet(urlStr)
@@ -296,21 +335,65 @@ async function handleApi(req, res) {
     let txs = readJSON(files.transactions)
     const tx = txs.find(t => t.external_transaction_id === transaction_id && t.user_id === user.id)
     if (!tx) return send(res, 404, { error: 'transaction_not_found' })
-    if (paid && tx.status !== 'paid') {
-      tx.status = 'paid'
+    if (tx.status === 'pending' && isExpired(tx)) {
+      tx.status = 'expired'
+      tx.updated_at = nowISO()
+      tx.expired_at = tx.expired_at || nowISO()
+      writeJSON(files.transactions, txs)
+      return send(res, 200, { paid: false, status: 'expired', transaction: tx })
+    }
+    if (paid && tx.status !== 'success') {
+      tx.status = 'success'
+      tx.paid_at = nowISO()
+      tx.updated_at = nowISO()
       const users = readJSON(files.users)
       const idx = users.findIndex(u => u.id === user.id)
       if (idx >= 0) {
-        users[idx].balance = Number(users[idx].balance || 0) + Number(tx.amount || 0)
+        const bonus = Number(tx.bonus_amount || 0)
+        const credit = Number(tx.amount || 0) + bonus
+        users[idx].balance = Number(users[idx].balance || 0) + credit
         writeJSON(files.users, users)
       }
       writeJSON(files.transactions, txs)
       const notifs = readJSON(files.notifications)
-      notifs.push({ id: uuid(), user_id: null, message: `Deposit dibayar oleh ${user.username} sebesar ${tx.amount}`, created_at: nowISO() })
+      notifs.push({ id: uuid(), user_id: null, message: `Deposit dibayar oleh ${user.username} sebesar ${tx.amount} (bonus ${Number(tx.bonus_amount||0)})`, created_at: nowISO() })
       writeJSON(files.notifications, notifs)
-      await sendTelegram(`✅ <b>Top Up Berhasil</b>\n👤 <b>User:</b> ${user.username}\n💰 <b>Jumlah:</b> Rp ${Number(tx.amount||0).toLocaleString('id-ID')}\n🆔 <b>ID:</b> <code>${tx.external_transaction_id}</code>`) 
+      await sendTelegram(`✅ <b>Top Up Berhasil</b>\n👤 <b>User:</b> ${user.username}\n💰 <b>Jumlah:</b> Rp ${Number(tx.amount||0).toLocaleString('id-ID')}\n🎁 <b>Bonus:</b> Rp ${Number(tx.bonus_amount||0).toLocaleString('id-ID')}\n🆔 <b>ID:</b> <code>${tx.external_transaction_id}</code>`)
+    } else {
+      tx.updated_at = nowISO()
+      writeJSON(files.transactions, txs)
     }
-    send(res, 200, { paid, status: resp.json && resp.json.status })
+    send(res, 200, { paid, status: tx.status, external_status: resp.json && resp.json.status, transaction: tx })
+    return
+  }
+  if (req.method === 'GET' && pathname === '/api/deposit/active') {
+    const user = requireUser(req, res)
+    if (!user) return
+    markExpiredTransactions()
+    const txs = readJSON(files.transactions)
+    const deposits = txs.filter(t => t.user_id === user.id && t.type === 'deposit').sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0))
+    if (!deposits.length) return send(res, 404, { error: 'not_found' })
+    send(res, 200, { transaction: deposits[0] })
+    return
+  }
+  if (req.method === 'POST' && pathname === '/api/deposit/cancel') {
+    const user = requireUser(req, res)
+    if (!user) return
+    const body = await parseBody(req)
+    markExpiredTransactions()
+    const txs = readJSON(files.transactions)
+    const tx = txs.find(t => t.external_transaction_id === body.transaction_id && t.user_id === user.id && t.type === 'deposit')
+    if (!tx) return send(res, 404, { error: 'transaction_not_found' })
+    if (tx.status !== 'pending') return send(res, 400, { error: 'cannot_cancel', status: tx.status })
+    tx.status = 'canceled'
+    tx.canceled_at = nowISO()
+    tx.updated_at = nowISO()
+    writeJSON(files.transactions, txs)
+    const notifs = readJSON(files.notifications)
+    notifs.push({ id: uuid(), user_id: null, message: `Deposit dibatalkan oleh ${user.username}`, created_at: nowISO() })
+    writeJSON(files.notifications, notifs)
+    await sendTelegram(`🚫 <b>Deposit Dibatalkan</b>\n👤 <b>User:</b> ${user.username}\n🆔 <b>ID:</b> <code>${tx.external_transaction_id}</code>`)
+    send(res, 200, { ok: true, transaction: tx })
     return
   }
   if (req.method === 'GET' && pathname === '/api/me') {
@@ -342,9 +425,13 @@ async function handleApi(req, res) {
     const servers = readJSON(files.servers)
     const server = servers.find(s => s.id === body.server_id)
     if (!server) return send(res, 404, { error: 'server_not_found' })
+    if (server.types && server.types[body.type] === false) return send(res, 400, { error: 'type_not_available' })
     const prices = server.prices || {}
-    const price = prices[body.type]
-    if (Number(user.balance || 0) < Number(price || 0)) return send(res, 400, { error: 'insufficient_balance' })
+    const basePrice = Number(prices[body.type] || 0)
+    const expDays = Math.max(1, Number(body.exp || 30))
+    const multiplier = Math.max(1, Math.ceil(expDays / 30))
+    const price = basePrice * multiplier
+    if (Number(user.balance || 0) < Number(price || 0)) return send(res, 400, { error: 'insufficient_balance', required: price })
     let urlStr = ''
     if (body.type === 'ssh') {
       urlStr = `https://${server.domain}/api/create-ssh?auth=${encodeURIComponent(server.auth)}&user=${encodeURIComponent(body.user)}&password=${encodeURIComponent(body.password)}&exp=${encodeURIComponent(body.exp)}&limitip=${encodeURIComponent(body.limitip)}`
@@ -366,7 +453,7 @@ async function handleApi(req, res) {
     users[idx].balance = Number(users[idx].balance || 0) - Number(price || 0)
     writeJSON(files.users, users)
     const accounts = readJSON(files.accounts)
-    accounts.push({ id: uuid(), user_id: user.id, server_id: server.id, type: body.type, details: j.data || j, price, created_at: nowISO() })
+    accounts.push({ id: uuid(), user_id: user.id, server_id: server.id, type: body.type, details: j.data || j, price, duration_days: expDays, created_at: nowISO() })
     writeJSON(files.accounts, accounts)
     const transactions = readJSON(files.transactions)
     transactions.push({ id: uuid(), user_id: user.id, type: 'purchase', amount: price, status: 'success', created_at: nowISO() })
@@ -385,6 +472,7 @@ async function handleApi(req, res) {
     const servers = readJSON(files.servers)
     const server = servers.find(s => s.id === body.server_id)
     if (!server) return send(res, 404, { error: 'server_not_found' })
+    if (server.types && server.types[body.type] === false) return send(res, 400, { error: 'type_not_available' })
     let urlStr = ''
     if (body.type === 'ssh') {
       urlStr = `https://${server.domain}/api/trial-ssh?auth=${encodeURIComponent(server.auth)}`
@@ -415,8 +503,12 @@ async function handleApi(req, res) {
     const server = servers.find(s => s.id === body.server_id)
     if (!server) return send(res, 404, { error: 'server_not_found' })
     const prices = server.prices || {}
-    const price = prices[body.type]
-    if (Number(user.balance || 0) < Number(price || 0)) return send(res, 400, { error: 'insufficient_balance' })
+    if (server.types && server.types[body.type] === false) return send(res, 400, { error: 'type_not_available' })
+    const basePrice = Number(prices[body.type] || 0)
+    const expDays = Math.max(1, Number(body.exp || 30))
+    const multiplier = Math.max(1, Math.ceil(expDays / 30))
+    const price = basePrice * multiplier
+    if (Number(user.balance || 0) < Number(price || 0)) return send(res, 400, { error: 'insufficient_balance', required: price })
     let pathName = ''
     if (body.type === 'vmess') pathName = 'renws'
     else if (body.type === 'ssh') pathName = 'rensh'
@@ -433,7 +525,7 @@ async function handleApi(req, res) {
     users[idx].balance = Number(users[idx].balance || 0) - Number(price || 0)
     writeJSON(files.users, users)
     const transactions = readJSON(files.transactions)
-    transactions.push({ id: uuid(), user_id: user.id, type: 'renew', amount: price, status: 'success', created_at: nowISO() })
+    transactions.push({ id: uuid(), user_id: user.id, type: 'renew', amount: price, status: 'success', created_at: nowISO(), duration_days: expDays })
     writeJSON(files.transactions, transactions)
     const notifs = readJSON(files.notifications)
     notifs.push({ id: uuid(), user_id: null, message: `Perpanjangan ${body.type} oleh ${user.username} sebesar ${price}`, created_at: nowISO() })

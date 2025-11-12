@@ -75,7 +75,8 @@
         <div class="card">
           <h3>Pengaturan Deposit</h3>
           <input id="apiKey" placeholder="API Key" />
-          <button id="btnSaveSettings">Simpan</button>
+          <input id="topupBonus" placeholder="Bonus Top Up (%)" type="number" min="0" />
+          <button id="btnSaveDepositSettings">Simpan</button>
         </div>
         <div class="card">
           <h3>Tambah Server</h3>
@@ -90,6 +91,12 @@
             <input id="defLimitIP" placeholder="Default Limit IP" type="number" value="1" />
             <input id="defQuota" placeholder="Default Kuota GB" type="number" value="0" />
           </div>
+          <div class="row wrap">
+            <label><input type="checkbox" id="typeSSH" checked /> SSH</label>
+            <label><input type="checkbox" id="typeVMess" checked /> VMess</label>
+            <label><input type="checkbox" id="typeVLess" checked /> VLess</label>
+            <label><input type="checkbox" id="typeTrojan" checked /> Trojan</label>
+          </div>
           <button id="btnAddServer">Tambah</button>
           <div id="servers"></div>
         </div>
@@ -101,7 +108,7 @@
             <div>Admin IDs</div><div><input id="tgAdminIds" placeholder="12345,67890" /></div>
           </div>
           <div class="row">
-            <button id="btnSaveSettings">Simpan</button>
+            <button id="btnSaveTelegram">Simpan</button>
           </div>
         </div>
         <div class="card">
