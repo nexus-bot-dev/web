@@ -1,0 +1,132 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SSH & VPN Multi Server</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <div class="container">
+    <h1>SSH & VPN Multi Server</h1>
+    <div id="auth" class="hidden"></div>
+    <div id="dashboard" class="hidden">
+      <h2>Halo, <span id="userName"></span></h2>
+      <div class="card">
+        <div>Saldo: <strong id="saldo"></strong></div>
+        <div>
+          <input id="depositAmount" type="number" placeholder="Jumlah deposit" />
+          <button id="btnDeposit">Buat QRIS</button>
+          <div id="depositResult"></div>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Beli Akun</h3>
+        <div>
+          <label>Server</label>
+          <select id="serverSelect"></select>
+        </div>
+        <div>
+          <label>Tipe</label>
+          <select id="typeSelect">
+            <option value="ssh">SSH</option>
+            <option value="vmess">VMess</option>
+            <option value="vless">VLess</option>
+            <option value="trojan">Trojan</option>
+          </select>
+        </div>
+        <div class="grid">
+          <input id="accUser" placeholder="Username akun" />
+          <input id="accPass" placeholder="Password akun" />
+          <input id="accExp" placeholder="Masa aktif (hari)" type="number" value="30" />
+          <input id="accLimitIP" placeholder="Limit IP" type="number" value="1" />
+          <input id="accQuota" placeholder="Kuota (GB)" type="number" value="0" />
+        </div>
+        <button id="btnBuy">Beli</button>
+        <button id="btnTrial">Trial</button>
+        <div id="buyResult"></div>
+      </div>
+      <div class="card">
+        <h3>Perpanjang Akun</h3>
+        <div class="grid">
+          <select id="renewServer"></select>
+          <select id="renewType">
+            <option value="ssh">SSH</option>
+            <option value="vmess">VMess</option>
+            <option value="vless">VLess</option>
+            <option value="trojan">Trojan</option>
+          </select>
+          <input id="renewNum" placeholder="Nomor/ID akun" />
+          <input id="renewExp" placeholder="Perpanjang (hari)" type="number" value="30" />
+        </div>
+        <button id="btnRenew">Perpanjang</button>
+        <div id="renewResult"></div>
+      </div>
+      <div class="card">
+        <h3>Akun Saya</h3>
+        <div id="accounts"></div>
+      </div>
+      <div class="card">
+        <h3>Notifikasi</h3>
+        <div id="notifications"></div>
+      </div>
+      <div id="adminPanel" class="hidden">
+        <h2>Admin Panel</h2>
+        <div class="card">
+          <h3>Pengaturan Deposit</h3>
+          <input id="apiKey" placeholder="API Key" />
+          <button id="btnSaveSettings">Simpan</button>
+        </div>
+        <div class="card">
+          <h3>Tambah Server</h3>
+          <div class="grid">
+            <input id="srvName" placeholder="Nama server" />
+            <input id="srvDomain" placeholder="Domain" />
+            <input id="srvAuth" placeholder="Auth token" />
+            <input id="priceSSH" placeholder="Harga SSH" type="number" />
+            <input id="priceVMess" placeholder="Harga VMess" type="number" />
+            <input id="priceVLess" placeholder="Harga VLess" type="number" />
+            <input id="priceTrojan" placeholder="Harga Trojan" type="number" />
+            <input id="defLimitIP" placeholder="Default Limit IP" type="number" value="1" />
+            <input id="defQuota" placeholder="Default Kuota GB" type="number" value="0" />
+          </div>
+          <button id="btnAddServer">Tambah</button>
+          <div id="servers"></div>
+        </div>
+        <div class="card">
+          <h3>Integrasi Telegram</h3>
+          <div class="kv">
+            <div>Bot Token</div><div><input id="tgBotToken" placeholder="123456:ABC-DEF..." /></div>
+            <div>Chat ID</div><div><input id="tgChatId" placeholder="-1001234567890" /></div>
+            <div>Admin IDs</div><div><input id="tgAdminIds" placeholder="12345,67890" /></div>
+          </div>
+          <div class="row">
+            <button id="btnSaveSettings">Simpan</button>
+          </div>
+        </div>
+        <div class="card">
+          <h3>User Pending</h3>
+          <div class="row">
+            <button id="btnRefreshUsers">Refresh</button>
+          </div>
+          <div id="pendingUsers"></div>
+        </div>
+        <div class="card">
+          <h3>Kirim Notifikasi</h3>
+          <input id="notifUserId" placeholder="User ID (kosong untuk semua)" />
+          <input id="notifMessage" placeholder="Pesan" />
+          <button id="btnSendNotif">Kirim</button>
+        </div>
+        <div class="card">
+          <h3>Log Admin</h3>
+          <div id="adminNotifs"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="/main.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+</body>
+</html>
