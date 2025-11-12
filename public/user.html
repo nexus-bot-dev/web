@@ -1,0 +1,116 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dashboard Pengguna</title>
+  <link rel="stylesheet" href="/styles.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="container wide" id="dashboard" data-role="user">
+    <header class="topbar">
+      <div>
+        <h1>Portal Pelanggan</h1>
+        <p class="muted">Kelola saldo, layanan SSH & VPN Anda</p>
+      </div>
+      <div class="actions">
+        <span id="topbarName" class="pill subtle"></span>
+        <button id="btnLogout" class="secondary">Keluar</button>
+      </div>
+    </header>
+
+    <section class="grid two">
+      <div class="card">
+        <h2>Informasi Akun</h2>
+        <div class="kv">
+          <div>Nama</div><div id="userName">-</div>
+          <div>Saldo</div><div id="saldo">Rp 0</div>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Ubah Password</h2>
+        <div class="stack">
+          <input id="currentPassword" type="password" placeholder="Password saat ini" />
+          <input id="newPassword" type="password" placeholder="Password baru" />
+          <input id="confirmPassword" type="password" placeholder="Konfirmasi password baru" />
+          <button id="btnChangePassword" class="secondary">Simpan Password</button>
+          <div id="changePasswordMsg" class="pill subtle"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Top Up Saldo</h2>
+      <div class="stack">
+        <div class="row wrap">
+          <input id="depositAmount" type="number" placeholder="Nominal deposit" min="1000" />
+          <button id="btnDeposit">Buat QRIS</button>
+        </div>
+        <div id="depositResult"></div>
+      </div>
+    </section>
+
+    <section class="grid two">
+      <div class="card">
+        <h2>Beli Akun</h2>
+        <div class="stack">
+          <label>Server</label>
+          <select id="serverSelect"></select>
+          <label>Layanan</label>
+          <select id="typeSelect">
+            <option value="ssh">SSH</option>
+            <option value="vmess">VMess</option>
+            <option value="vless">VLess</option>
+            <option value="trojan">Trojan</option>
+          </select>
+          <div class="grid two">
+            <input id="accUser" placeholder="Username akun" />
+            <input id="accPass" placeholder="Password akun" />
+            <input id="accExp" type="number" placeholder="Durasi (hari)" value="30" />
+            <input id="accLimitIP" type="number" placeholder="Limit IP" value="1" />
+            <input id="accQuota" type="number" placeholder="Kuota (GB)" value="0" />
+          </div>
+          <div class="row wrap">
+            <button id="btnBuy">Beli</button>
+            <button id="btnTrial" class="secondary">Buat Trial</button>
+          </div>
+          <div id="buyResult" class="pill subtle"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Perpanjang Akun</h2>
+        <div class="stack">
+          <label>Server</label>
+          <select id="renewServer"></select>
+          <label>Layanan</label>
+          <select id="renewType">
+            <option value="ssh">SSH</option>
+            <option value="vmess">VMess</option>
+            <option value="vless">VLess</option>
+            <option value="trojan">Trojan</option>
+          </select>
+          <input id="renewNum" placeholder="ID / Username akun" />
+          <input id="renewExp" type="number" placeholder="Perpanjang (hari)" value="30" />
+          <button id="btnRenew">Perpanjang</button>
+          <div id="renewResult" class="pill subtle"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Notifikasi</h2>
+      <div id="notifications" class="stack"></div>
+    </section>
+
+    <section class="card">
+      <h2>Akun Saya</h2>
+      <div id="accounts" class="stack"></div>
+    </section>
+  </div>
+  <script src="/user.js" type="module"></script>
+</body>
+</html>

@@ -1,0 +1,141 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dashboard Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <div class="container wide" id="dashboard" data-role="admin">
+    <header class="topbar">
+      <div>
+        <h1>Panel Admin</h1>
+        <p class="muted">Atur server, deposit, pelanggan, dan lisensi instalasi.</p>
+      </div>
+      <div class="actions">
+        <span id="adminTopbarName" class="pill subtle"></span>
+        <button id="btnLogout" class="secondary">Keluar</button>
+      </div>
+    </header>
+
+    <section class="grid two">
+      <div class="card">
+        <h2>Informasi Admin</h2>
+        <div class="kv">
+          <div>Nama</div><div id="adminUserName">-</div>
+          <div>Saldo</div><div id="adminSaldo">Rp 0</div>
+          <div>Peran</div><div id="adminRole">-</div>
+          <div>Domain Utama</div><div id="adminPrimaryDomain" class="monos">-</div>
+          <div>Kontak Owner</div><div class="monos">@AutoVPN_VIP</div>
+        </div>
+      </div>
+      <div class="card" id="licenseOverview">
+        <h2>Status Lisensi</h2>
+        <div class="stack">
+          <div id="licenseSummary" class="pill subtle">Memuat status...</div>
+          <div class="kv">
+            <div>Kunci</div><div id="licenseKeyLabel" class="monos">-</div>
+            <div>IP Terdaftar</div><div id="licenseIp">-</div>
+            <div>Berakhir</div><div id="licenseExpiry">-</div>
+          </div>
+          <div class="actions">
+            <button id="btnRefreshLicense" class="secondary">Segarkan</button>
+            <a class="button secondary" href="/license.html" target="_blank" rel="noopener">Buka Halaman Aktivasi</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card" id="licenseManagement" data-owner-only>
+      <h2>Kelola Kunci Lisensi</h2>
+      <div class="grid two">
+        <input id="licenseLabel" placeholder="Nama lisensi / catatan" />
+        <input id="licenseDays" type="number" placeholder="Durasi (hari)" value="30" />
+        <input id="licenseIps" placeholder="IP yang diizinkan (opsional, pisahkan dengan koma)" />
+        <input id="licenseQuota" type="number" placeholder="Jumlah IP diperbolehkan" value="1" />
+      </div>
+      <div class="actions">
+        <button id="btnCreateLicense">Buat Kunci</button>
+        <div id="licenseCreateMsg" class="pill subtle"></div>
+      </div>
+      <div id="licenseKeys" class="stack"></div>
+    </section>
+
+    <section class="card" id="licenseRestricted" data-non-owner>
+      <h2>Akses Lisensi Terbatas</h2>
+      <div class="pill warning">Hanya admin owner yang dapat membuat kunci lisensi dan menambah IP.</div>
+      <p class="muted">Hubungi owner di <span class="monos">@AutoVPN_VIP</span> untuk mendapatkan akses penuh atau meminta pembaruan izin IP.</p>
+    </section>
+
+    <section class="card">
+      <h2>Pengaturan Deposit</h2>
+      <div class="grid two">
+        <input id="apiKey" placeholder="API Key Deposit" />
+        <input id="topupBonus" type="number" placeholder="Bonus Top Up (%)" min="0" />
+      </div>
+      <button id="btnSaveDepositSettings">Simpan Pengaturan Deposit</button>
+      <div id="btnSaveDepositSettingsMsg" class="pill subtle"></div>
+    </section>
+
+    <section class="card">
+      <h2>Integrasi Telegram</h2>
+      <div class="grid two">
+        <input id="tgBotToken" placeholder="Bot Token" />
+        <input id="tgChatId" placeholder="Chat ID" />
+        <input id="tgAdminIds" placeholder="Admin IDs (pisahkan dengan koma)" />
+      </div>
+      <button id="btnSaveTelegram">Simpan Pengaturan Telegram</button>
+      <div id="btnSaveTelegramMsg" class="pill subtle"></div>
+    </section>
+
+    <section class="card">
+      <h2>Tambah Server</h2>
+      <div class="grid two">
+        <input id="srvName" placeholder="Nama server" />
+        <input id="srvDomain" placeholder="Domain" />
+        <input id="srvAuth" placeholder="Auth token" />
+        <input id="priceSSH" type="number" placeholder="Harga SSH" />
+        <input id="priceVMess" type="number" placeholder="Harga VMess" />
+        <input id="priceVLess" type="number" placeholder="Harga VLess" />
+        <input id="priceTrojan" type="number" placeholder="Harga Trojan" />
+        <input id="defLimitIP" type="number" placeholder="Default Limit IP" value="1" />
+        <input id="defQuota" type="number" placeholder="Default Kuota (GB)" value="0" />
+      </div>
+      <div class="row">
+        <label><input type="checkbox" id="typeSSH" checked /> SSH</label>
+        <label><input type="checkbox" id="typeVMess" checked /> VMess</label>
+        <label><input type="checkbox" id="typeVLess" checked /> VLess</label>
+        <label><input type="checkbox" id="typeTrojan" checked /> Trojan</label>
+      </div>
+      <button id="btnAddServer">Tambahkan Server</button>
+      <div id="btnAddServerMsg" class="pill subtle"></div>
+      <div id="servers" class="stack"></div>
+    </section>
+
+    <section class="grid two">
+      <div class="card">
+        <h2>User Pending</h2>
+        <button id="btnRefreshUsers" class="secondary">Muat Ulang</button>
+        <div id="pendingUsers" class="stack"></div>
+      </div>
+      <div class="card">
+        <h2>Kirim Notifikasi</h2>
+        <input id="notifUserId" placeholder="User ID (kosong = semua)" />
+        <textarea id="notifMessage" placeholder="Pesan"></textarea>
+        <button id="btnSendNotif">Kirim</button>
+        <div id="btnSendNotifMsg" class="pill subtle"></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Aktivitas Terbaru</h2>
+      <div id="adminNotifs" class="stack"></div>
+    </section>
+  </div>
+  <script src="/admin.js" type="module"></script>
+</body>
+</html>

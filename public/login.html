@@ -3,21 +3,30 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Masuk</title>
+  <title>Masuk ke Portal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/styles.css" />
 </head>
-<body>
-  <div class="container">
-    <h1>Masuk</h1>
-    <div class="card">
-      <input id="loginUser" placeholder="Username" />
-      <input id="loginPass" placeholder="Password" type="password" />
-      <button id="btnLogin">Masuk</button>
-      <button id="btnAdminLogin">Masuk Admin</button>
-      <div id="loginMsg" class="pill"></div>
+<body class="auth-body">
+  <div class="glow"></div>
+  <div class="auth-card">
+    <div class="auth-header">
+      <h1>Selamat Datang</h1>
+      <p class="muted">Kelola akun SSH, VMess, VLess, dan Trojan Anda dalam satu dashboard modern.</p>
     </div>
-    <div class="card">
-      <a href="/register.html">Belum punya akun? Daftar</a>
+    <div class="auth-form">
+      <input id="loginUser" placeholder="Username" autocomplete="username" />
+      <input id="loginPass" placeholder="Password" type="password" autocomplete="current-password" />
+      <button id="btnLogin">Masuk</button>
+      <button id="btnAdminLogin" class="secondary">Masuk sebagai Admin</button>
+      <div id="loginMsg" class="pill subtle"></div>
+    </div>
+    <div class="auth-footer">
+      <p class="muted">Owner admin (akses penuh): <strong>admin</strong> / <strong>admin123</strong></p>
+      <p class="muted">Hubungi owner di <span class="monos">@AutoVPN_VIP</span> jika membutuhkan bantuan lisensi.</p>
+      <p><a class="button secondary" href="/register.html">Buat akun pelanggan</a></p>
     </div>
   </div>
   <script src="/login.js"></script>

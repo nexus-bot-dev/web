@@ -2,6 +2,12 @@
 
 Aplikasi web untuk membuat akun SSH/VMess/VLess/Trojan terintegrasi saldo dan deposit QRIS, mendukung multi server, limit IP/kuota, perpanjang, dan notifikasi.
 
+## Owner Admin & Kontak Resmi
+
+- **Owner admin (akses penuh lisensi & IP)**: username `admin`, password `admin123`.
+- **Telegram owner**: [`@AutoVPN_VIP`](https://t.me/AutoVPN_VIP).
+- Hanya owner admin yang dapat membuat kunci lisensi, mengatur masa aktifnya, dan menambahkan IP VPS yang diizinkan. Admin biasa tetap bisa mengelola server, pelanggan, deposit, dan notifikasi namun tidak memiliki akses ke manajemen lisensi.
+
 ## Instalasi Cepat
 
 - Windows (PowerShell):
@@ -21,7 +27,11 @@ Aplikasi web untuk membuat akun SSH/VMess/VLess/Trojan terintegrasi saldo dan de
 - Linux/macOS:
   - `bash scripts/auto-install.sh`
 
-Script akan mengkloning repositori `https://github.com/nexus-bot-dev/web.git` ke folder `web` (atau nama yang Anda beri sebagai argumen), memasang dependensi, dan menjalankan server.
+- Saat skrip berjalan, isikan:
+  - **Kunci lisensi 11 digit** (wajib untuk membuka fitur).
+  - **Domain utama** (opsional, tetapi disarankan agar pengaturan otomatis menampilkan domain di panel owner).
+
+Script akan mengkloning repositori `https://github.com/nexus-bot-dev/web.git` ke folder `web` (atau nama yang Anda beri sebagai argumen), memasang dependensi, menanyakan kunci lisensi **11 digit**, meminta domain yang ingin dipakai, kemudian menjalankan server.
 
 ## Instalasi via VPS (Ubuntu/Debian)
 
@@ -65,12 +75,21 @@ Script akan mengkloning repositori `https://github.com/nexus-bot-dev/web.git` ke
 ## Login Wajib
 
 - Pengguna harus login sebelum mengakses dashboard dan fitur.
-- Admin login: masukkan username dan password, admin pertama dibuat otomatis.
+- Owner admin (`admin` / `admin123`) memiliki akses penuh termasuk lisensi dan whitelisting IP.
+- Admin biasa (dibuat oleh owner) tetap bisa mengelola server, pelanggan, dan deposit tetapi tidak dapat membuat kunci lisensi atau menambah IP.
 
 ## Konfigurasi Awal
 
 - Simpan `API Key` deposit di panel admin.
 - Tambahkan server: `Nama`, `Domain`, `Auth`, harga per tipe, default `Limit IP` dan `Kuota`.
+- Pastikan domain utama mengarah ke IP VPS. Skrip auto install akan menanyakan domain dan menyimpannya di pengaturan (`primary_domain`) yang tampil pada panel owner.
+
+## Lisensi & Domain
+
+- Aktivasi lisensi dilakukan via halaman `/license.html` menggunakan kunci 11 digit.
+- Jika lisensi kadaluarsa, halaman akan dialihkan ke `daniel.html` sampai lisensi aktif kembali.
+- Owner admin bisa membuat kunci lisensi baru, mengatur masa aktif, serta menambahkan IP VPS dari menu **Kelola Kunci Lisensi** pada panel admin.
+- Admin biasa tidak dapat mengubah lisensi; mereka akan melihat notifikasi untuk menghubungi owner.
 
 ## Fitur Utama
 
@@ -118,3 +137,4 @@ Script akan mengkloning repositori `https://github.com/nexus-bot-dev/web.git` ke
 
 - Pastikan Node.js terpasang di mesin jika tidak menggunakan Docker.
 - Isi harga per tipe di server agar sistem mengontrol saldo.
+- Perubahan lisensi dan whitelist IP hanya bisa dilakukan oleh owner admin. Hubungi [`@AutoVPN_VIP`](https://t.me/AutoVPN_VIP) bila membutuhkan izin baru.

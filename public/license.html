@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Daftar Akun Baru</title>
+  <title>Aktivasi Lisensi</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -13,19 +13,19 @@
   <div class="glow"></div>
   <div class="auth-card">
     <div class="auth-header">
-      <h1>Buat Akun Pelanggan</h1>
-      <p class="muted">Setelah disetujui admin, Anda dapat mengelola saldo dan layanan.</p>
+      <h1>Aktivasi Lisensi</h1>
+      <p class="muted">Masukkan kunci lisensi 11 digit untuk mengaktifkan portal.</p>
     </div>
     <div class="auth-form">
-      <input id="regUser" placeholder="Username" autocomplete="username" />
-      <input id="regPass" placeholder="Password" type="password" autocomplete="new-password" />
-      <button id="btnRegister">Daftar</button>
-      <div id="regMsg" class="pill subtle"></div>
+      <input id="licenseKey" maxlength="11" placeholder="Contoh: 12345678901" inputmode="numeric" />
+      <input id="licenseIp" placeholder="IP VPS (opsional)" />
+      <button id="btnActivate">Aktifkan Lisensi</button>
+      <div id="licenseMsg" class="pill subtle"></div>
     </div>
     <div class="auth-footer">
-      <a class="button secondary" href="/login.html">Sudah punya akun? Masuk</a>
+      <p class="muted small">Butuh bantuan? Hubungi admin untuk mendapatkan kunci dan izin IP VPS Anda.</p>
     </div>
   </div>
-  <script src="/register.js"></script>
+  <script src="/license.js"></script>
 </body>
 </html>
